@@ -12,6 +12,7 @@ export default function HomePage() {
   function loginAsvisitor() {
     router.push("/visitante");
   }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-cyan-600">
       <div className="bg-white rounded-2xl shadow-lg p-10 flex flex-col gap-4 w-full max-w-sm border border-cyan-100">
