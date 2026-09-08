@@ -9,7 +9,7 @@ export default function HomePage() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  function loginAsvisitor() {
+  function loginAsVisitor() {
     router.push("/visitante");
   }
 
@@ -30,7 +30,7 @@ export default function HomePage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button onClick={() => console.log("tentei fazer login")}>Login</Button>
-        <Button onClick={() => loginAsvisitor()}>Acessar como Visitante</Button>
+        <Button onClick={() => loginAsVisitor()}>Acessar como Visitante</Button>
       </div>
     </div>
   );
