@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
-import bcrypt from "bcryptjs";
+import { doc, runTransaction, Timestamp } from "firebase/firestore";
 
+import bcrypt from "bcryptjs";
 import { db } from "@/lib/firebase/admin";
 
 interface RequestAccessBody {
@@ -16,8 +16,10 @@ export async function POST(request: Request) {
     const body = (await request.json()) as RequestAccessBody;
 
     const name = typeof body.name === "string" ? body.name.trim() : "";
+
     const email =
       typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+
     const password = typeof body.password === "string" ? body.password : "";
 
     if (!name || !email || !password) {
@@ -43,16 +45,19 @@ export async function POST(request: Request) {
       );
     }
 
-    /*
-     * Um hash do e-mail é usado como ID do documento.
-     * Isso permite impedir cadastros duplicados de forma segura.
-     */
     const userId = createHash("sha256").update(email).digest("hex");
+
     const userRef = doc(db, "users", userId);
+
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Transação: garante que a leitura + escrita ocorram de forma atômica,
-    // evitando que duas requisições simultâneas criem o mesmo usuário.
+    // Data usada como base para criação e validade.
+    const createdAt = new Date();
+
+    // Cria uma nova data com validade de um ano.
+    const expireAt = new Date(createdAt);
+    expireAt.setFullYear(expireAt.getFullYear() + 1);
+
     await runTransaction(db, async (tx) => {
       const existing = await tx.get(userRef);
 
@@ -67,8 +72,10 @@ export async function POST(request: Request) {
         emailVerified: false,
         active: true,
         role: "user",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+
+        createdAt: Timestamp.fromDate(createdAt),
+        updatedAt: Timestamp.fromDate(createdAt),
+        expireAt: Timestamp.fromDate(expireAt),
       });
     });
 
